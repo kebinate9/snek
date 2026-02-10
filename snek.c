@@ -21,15 +21,19 @@ static Food food;
 static int  lastKeyPressed;
 static bool playing;
 static int  score;
+static int highScore;
+
+static const int SPEED = 3;
 
 static void initGame();
 static void drawGame();
 static void updateGame();
+static void menu();
 
 int main(void)
 {
   InitWindow(WINWIDTH, WINHEIGHT, "Snek");
-  SetTargetFPS(20);
+  SetTargetFPS(60);
   initGame();
 
   while (!WindowShouldClose())
@@ -45,25 +49,35 @@ int main(void)
 
 void initGame()
 {
-  snek.x    = 10;
-  snek.y    = 200;
-  snek.size = 1;
+  score = 0;
 
-  food.x = GetRandomValue(0, 400 - 10);
-  food.y = GetRandomValue(0, 400 - 10);
+  snek.x     = 10;
+  snek.y     = 200;
+  snek.size  = 1;
+
+  food.x = GetRandomValue(0, WINWIDTH - 10);
+  food.y = GetRandomValue(0, WINHEIGHT - 10);
 }
 
 void drawGame()
 {
+
   ClearBackground(BLACK);
   DrawRectangle(snek.x, snek.y, 10, 10 * snek.size, WHITE);
-  DrawText(TextFormat("Score: %d", score), 10, 10, 20, WHITE);
+  DrawText(TextFormat("Score: %d High Score: %d", score, highScore), 10, 10, 20, WHITE);
   DrawCircle(food.x, food.y, 5, WHITE);
   updateGame();
 }
 
 void updateGame()
 {
+  if (!playing) {
+    menu();
+    if (GetKeyPressed()) {
+      initGame();
+      playing = true;
+    }
+  }
   int key = GetKeyPressed();
 
   if (key) {
@@ -73,19 +87,32 @@ void updateGame()
 
   if (playing) {
     if (lastKeyPressed == KEY_W) {
-      snek.y -= 10;
+      snek.y -= SPEED;
     }else if (lastKeyPressed == KEY_S) {
-      snek.y += 10;
+      snek.y += SPEED;
     }else if (lastKeyPressed == KEY_A) {
-      snek.x -= 10;
+      snek.x -= SPEED;
     }else if (lastKeyPressed == KEY_D) {
-      snek.x += 10;
+      snek.x += SPEED;
     }
 
     if (CheckCollisionCircleRec((Vector2){food.x, food.y}, 5, (Rectangle){snek.x, snek.y, 10, 10})) {
-      food.x = GetRandomValue(0, 400);
-      food.y = GetRandomValue(0, 400);
+      food.x = GetRandomValue(0, WINWIDTH);
+      food.y = GetRandomValue(0, WINHEIGHT);
       score ++;
     }
+
+    if(snek.x < 0 || snek.x > WINWIDTH || snek.y < 0 || snek.y > WINHEIGHT) {
+      playing = false;
+      lastKeyPressed = 0;
+      key = 0;
+      if (score > highScore) highScore = score;
+    }
   }
+}
+
+void menu()
+{
+  ClearBackground(BLACK);
+  DrawText("Press any key to start", 20, WINHEIGHT/1.1, 20, WHITE);
 }
