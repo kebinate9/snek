@@ -3,10 +3,11 @@
 
 #define WINWIDTH  400
 #define WINHEIGHT 400
+#define MAXLENGTH 256
 
 typedef struct Snek {
-  int x;
-  int y;
+  int x[MAXLENGTH];
+  int y[MAXLENGTH];
   int size;
 } Snek;
 
@@ -50,10 +51,11 @@ int main(void)
 void initGame()
 {
   score = 0;
-
-  snek.x     = 10;
-  snek.y     = 200;
-  snek.size  = 1;
+  snek.size = 3;
+  for (int i = 0; i < snek.size; i++) {
+    snek.x[i] = 200 - i * 10;
+    snek.y[i] = 200;
+  }
 
   food.x = GetRandomValue(0, WINWIDTH - 10);
   food.y = GetRandomValue(0, WINHEIGHT - 10);
@@ -63,7 +65,9 @@ void drawGame()
 {
 
   ClearBackground(BLACK);
-  DrawRectangle(snek.x, snek.y, 10, 10 * snek.size, WHITE);
+
+  for (int i = 0; i < snek.size; i++) DrawRectangle(snek.x[i], snek.y[i], 10, 10, WHITE);
+
   DrawText(TextFormat("Score: %d High Score: %d", score, highScore), 10, 10, 20, WHITE);
   DrawCircle(food.x, food.y, 5, WHITE);
   updateGame();
@@ -87,22 +91,28 @@ void updateGame()
 
   if (playing) {
     if (lastKeyPressed == KEY_W) {
-      snek.y -= SPEED;
+      snek.y[0] -= SPEED;
     }else if (lastKeyPressed == KEY_S) {
-      snek.y += SPEED;
+      snek.y[0] += SPEED;
     }else if (lastKeyPressed == KEY_A) {
-      snek.x -= SPEED;
+      snek.x[0] -= SPEED;
     }else if (lastKeyPressed == KEY_D) {
-      snek.x += SPEED;
+      snek.x[0] += SPEED;
     }
 
-    if (CheckCollisionCircleRec((Vector2){food.x, food.y}, 5, (Rectangle){snek.x, snek.y, 10, 10})) {
+    for (int i = snek.size - 1; i > 0; i--) {
+      snek.x[i] = snek.x[i-1];
+      snek.y[i] = snek.y[i-1];
+    }
+
+    if (CheckCollisionCircleRec((Vector2){food.x, food.y}, 5, (Rectangle){snek.x[0], snek.y[0], 10, 10})) {
       food.x = GetRandomValue(0, WINWIDTH);
       food.y = GetRandomValue(0, WINHEIGHT);
       score ++;
+      snek.size ++;
     }
 
-    if(snek.x < 0 || snek.x > WINWIDTH || snek.y < 0 || snek.y > WINHEIGHT) {
+    if(snek.x[0] < 0 || snek.x[0] > WINWIDTH || snek.y[0] < 0 || snek.y[0] > WINHEIGHT) {
       playing = false;
       lastKeyPressed = 0;
       key = 0;
